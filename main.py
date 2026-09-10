@@ -1,3 +1,4 @@
+import json
 import os
 import subprocess
 
@@ -83,3 +84,47 @@ def analyze_codeql_databases(organization: Organization):
             continue
         os.makedirs(os.path.dirname(path_to_output), exist_ok=True)
         analyze_codeql_database(path_to_database, path_to_output)
+
+
+def sarif_to_json(sarif: dict) -> list[dict]:
+    results = []
+    for run in sarif.get("runs", []):
+        rules = run.get("tool", {}).get("driver", {}).get("rules", [])
+        rules_by_id = {rule["id"]: rule for rule in rules}
+
+        for result in run.get("results", []):
+            rule = rules_by_id.get(result.get("ruleId"), {})
+            kind = (rule.get("properties") or {}).get("kind")
+            if kind in {"metric", "diagnostic"}:
+                continue
+
+            loc = (result.get("locations") or [{}])[0]
+            phys = loc.get("physicalLocation") or {}
+            region = phys.get("region") or {}
+            uri = (phys.get("artifactLocation") or {}).get("uri")
+
+            props = rule.get("properties") or {}
+            severity = (
+                    result.get("level")
+                    or (rule.get("defaultConfiguration") or {}).get("level")
+                    or props.get("problem.severity")
+            )
+
+            results.append({
+                "rule_id": result.get("ruleId"),
+                "severity": severity,
+                "message": (result.get("message") or {}).get("text"),
+                "file": uri,
+                "start_line": region.get("startLine"),
+            })
+    return results
+
+
+def transform_organization_sarifs(organization: Organization):
+    os.makedirs(f'./results/{organization.name}', exist_ok=True)
+    for repository in organization.repositories:
+        path_to_sarif = f'./codeql_outputs/{organization.name}/{repository.name}.sarif'
+        sarif = json.load(open(path_to_sarif))
+        results = sarif_to_json(sarif)
+        with open(f'./results/{organization.name}/{repository.name}.json', 'w') as f:
+            json.dump(results, f)
