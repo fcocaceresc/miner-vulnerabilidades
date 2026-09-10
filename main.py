@@ -37,3 +37,33 @@ def clone_repository(repository: Repository, directory: str):
 def clone_organization_repositories(organization: Organization):
     for repository in organization.repositories:
         clone_repository(repository, organization.name)
+
+
+def language_to_identifier(language: str | None) -> str | None:
+    mapper = {
+        'C/C++': 'c-cpp',
+        'C#': 'csharp',
+        'GitHub Actions workflows': 'actions',
+        'Go': 'go',
+        'Java/Kotlin': 'java-kotlin',
+        'JavaScript/TypeScript': 'javascript-typescript',
+        'Python': 'python',
+        'Ruby': 'ruby',
+        'Rust': 'rust',
+        'Swift': 'swift'
+    }
+    return mapper.get(language, None)
+
+
+def create_codeql_database(repository: Repository, path_to_database: str, source_root: str):
+    language_identifier = language_to_identifier(repository.language)
+    if language_identifier is None:
+        return
+    subprocess.run(['./codeql_database_create.sh', path_to_database, language_identifier, source_root])
+
+
+def create_codeql_databases(organization: Organization):
+    for repository in organization.repositories:
+        path_to_database = f'./codeql_databases/{organization.name}/{repository.name}'
+        os.makedirs(path_to_database, exist_ok=True)
+        create_codeql_database(repository, path_to_database, os.path.join(organization.name, repository.name))
