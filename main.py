@@ -31,6 +31,8 @@ def to_organization(organization_name: str, organization_repositories: dict) -> 
 
 def clone_repository(repository: Repository, directory: str):
     full_directory = os.path.join(directory, repository.name)
+    if os.path.exists(full_directory):
+        return
     subprocess.run(["./clone_repository.sh", repository.clone_url, full_directory])
 
 
