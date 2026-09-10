@@ -1,4 +1,5 @@
 import os
+import subprocess
 
 import requests
 from dotenv import load_dotenv
@@ -25,3 +26,12 @@ def to_organization(organization: dict) -> Organization:
     for repository in organization:
         repositories.append(Repository(**repository))
     return Organization(**{'repositories': repositories})
+
+
+def clone_repository(repository: Repository):
+    subprocess.run(["./clone_repository.sh", repository.clone_url])
+
+
+def clone_organization_repositories(organization: Organization):
+    for repository in organization.repositories:
+        clone_repository(repository)
