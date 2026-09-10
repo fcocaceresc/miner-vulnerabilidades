@@ -69,3 +69,17 @@ def create_codeql_databases(organization: Organization):
         path_to_database = f'./codeql_databases/{organization.name}/{repository.name}'
         os.makedirs(path_to_database, exist_ok=True)
         create_codeql_database(repository, path_to_database, os.path.join(organization.name, repository.name))
+
+
+def analyze_codeql_database(path_to_database: str, path_to_output: str):
+    subprocess.run(['./codeql_database_analyze.sh', path_to_database, path_to_output])
+
+
+def analyze_codeql_databases(organization: Organization):
+    for repository in organization.repositories:
+        path_to_database = f'./codeql_databases/{organization.name}/{repository.name}'
+        path_to_output = f'./codeql_outputs/{organization.name}/{repository.name}.sarif'
+        if os.path.exists(path_to_output):
+            continue
+        os.makedirs(os.path.dirname(path_to_output), exist_ok=True)
+        analyze_codeql_database(path_to_database, path_to_output)
