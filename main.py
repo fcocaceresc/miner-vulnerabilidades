@@ -3,14 +3,9 @@ import os
 import subprocess
 
 import requests
-from dotenv import load_dotenv
+import typer
 
 from model import Repository, Organization
-
-load_dotenv()
-
-GITHUB_PERSONAL_ACCESS_TOKEN = os.getenv('GITHUB_PERSONAL_ACCESS_TOKEN')
-ORGANIZATION_NAME = os.getenv('ORGANIZATION_NAME')
 
 
 def list_organization_repositories(github_personal_access_token: str, organization: str) -> dict:
@@ -128,3 +123,20 @@ def transform_organization_sarifs(organization: Organization):
         results = sarif_to_json(sarif)
         with open(f'./results/{organization.name}/{repository.name}.json', 'w') as f:
             json.dump(results, f)
+
+
+app = typer.Typer()
+
+
+@app.command()
+def miner(github_personal_access_token: str, organization_name: str):
+    repositories = list_organization_repositories(github_personal_access_token, organization_name)
+    organization = to_organization(organization_name, repositories)
+    clone_organization_repositories(organization)
+    create_codeql_databases(organization)
+    analyze_codeql_databases(organization)
+    transform_organization_sarifs(organization)
+
+
+if __name__ == "__main__":
+    app()
