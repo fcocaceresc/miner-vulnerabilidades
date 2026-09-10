@@ -1,3 +1,4 @@
 #!/bin/bash
 REPOSITORY="$1"
-git clone "$REPOSITORY"
+DIRECTORY="$2"
+git clone "$REPOSITORY" "$DIRECTORY"

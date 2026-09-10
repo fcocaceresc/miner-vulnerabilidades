@@ -29,10 +29,11 @@ def to_organization(organization_name: str, organization_repositories: dict) -> 
     return Organization(**{'name': organization_name, 'repositories': repositories})
 
 
-def clone_repository(repository: Repository):
-    subprocess.run(["./clone_repository.sh", repository.clone_url])
+def clone_repository(repository: Repository, directory: str):
+    full_directory = os.path.join(directory, repository.name)
+    subprocess.run(["./clone_repository.sh", repository.clone_url, full_directory])
 
 
 def clone_organization_repositories(organization: Organization):
     for repository in organization.repositories:
-        clone_repository(repository)
+        clone_repository(repository, organization.name)
