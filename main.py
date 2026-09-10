@@ -9,6 +9,7 @@ from model import Repository, Organization
 load_dotenv()
 
 GITHUB_PERSONAL_ACCESS_TOKEN = os.getenv('GITHUB_PERSONAL_ACCESS_TOKEN')
+ORGANIZATION_NAME = os.getenv('ORGANIZATION_NAME')
 
 
 def list_organization_repositories(github_personal_access_token: str, organization: str) -> dict:
@@ -21,11 +22,11 @@ def list_organization_repositories(github_personal_access_token: str, organizati
     return request.json()
 
 
-def to_organization(organization: dict) -> Organization:
+def to_organization(organization_name: str, organization_repositories: dict) -> Organization:
     repositories = []
-    for repository in organization:
+    for repository in organization_repositories:
         repositories.append(Repository(**repository))
-    return Organization(**{'repositories': repositories})
+    return Organization(**{'name': organization_name, 'repositories': repositories})
 
 
 def clone_repository(repository: Repository):

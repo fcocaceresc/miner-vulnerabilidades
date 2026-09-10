@@ -9,4 +9,5 @@ class Repository(BaseModel):
 
 
 class Organization(BaseModel):
+    name: str
     repositories: List[Repository]
